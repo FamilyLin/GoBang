@@ -54,8 +54,9 @@ public class Gobang_simple {
                 var yPos = (int)((e.getY() - Y_OFFSET) / RATE);
                 board[xPos][yPos] = "●";
                 //添加白棋自动下子
-                var cxPos = (int)((Math.random()*BOARD_SIZE-X_OFFSET) / RATE);
-                var cyPos = (int)((Math.random()*BOARD_SIZE-Y_OFFSET) / RATE);
+
+                var cxPos = (int)((Math.random()*TABLE_WIDTH-X_OFFSET) / RATE);
+                var cyPos = (int)((Math.random()*TABLE_HETGHT-Y_OFFSET) / RATE);
                 board[cxPos][cyPos] = "○";
 
                 chessBoard.repaint();

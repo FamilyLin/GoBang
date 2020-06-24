@@ -1,7 +1,5 @@
 package Gobang_UI;
 
-import jdk.jfr.Category;
-
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -56,25 +54,26 @@ public class FiveChessFrame extends JFrame implements MouseListener, Runnable {
         t.start();
         t.suspend();
         //刷新屏幕，防止开始游戏时，出现无法显示的情况
-        //this.repaint();
+        this.repaint();
 
-
+        //显示背景图片
         try {
-            bgImage = ImageIO.read(new File("src/image/back.jpg"));
+            bgImage = ImageIO.read(new File("src/image/back1.jpg"));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public void paint(Graphics g) {
-        //双缓冲技术放防止屏幕闪烁
-        BufferedImage bi = new BufferedImage(500, 500, BufferedImage.TYPE_INT_ARGB);
+        //双缓冲技术防止屏幕闪烁
+        BufferedImage bi = new BufferedImage(500, 500,
+                BufferedImage.TYPE_INT_ARGB);
         Graphics g2 = bi.createGraphics();
-        //绘制背景
+        //绘制棋盘和显示信息
         g2.drawImage(bgImage, 0, 0, this);
         g2.setFont(new Font("黑体", Font.BOLD, 20));
         g2.drawString("游戏信息" + message, 120, 60);
-        g2.setFont(new Font("宋体", 0, 14));
+        g2.setFont(new Font("宋体", Font.PLAIN, 14));
         g2.drawString("黑方时间:" + blackMessage, 30, 460);
         g2.drawString("白方时间: " + whiteMessage, 260, 460);
 
@@ -96,23 +95,14 @@ public class FiveChessFrame extends JFrame implements MouseListener, Runnable {
         g2.fillOval(188, 368, 4, 4);
         g2.fillOval(188, 248, 4, 4);
 
-  /*      //绘制棋子
-        x = (x - 10) / 20 * 20 + 10;
-        y = (y - 70) / 20 * 20 + 70;
-        //黑子
-        g.fillOval(x,y,10,10);
-        //白子
-        g.setColor(Color.white);
-        g.fillOval(x - 7, y - 7,14,14);
-        g.setColor(Color.BLACK);
-        g.drawOval(x - 7, y - 7,14, 14);*/
 
         for (int i = 0; i < 19; i++) {
             for (int j = 0; j < 19; j++) {
                 if (allChess[i][j] == 1) {
-                    //黑子
+                    //黑子；*20表示像素坐标；+10表示棋盘位移
                     int tempx = i * 20 + 10;
                     int tempy = j * 20 + 70;
+                    g2.setColor(Color.black);
                     g2.fillOval(tempx - 7, tempy - 7, 14, 14);
                 }
                 if (allChess[i][j] == 2) {
@@ -121,8 +111,6 @@ public class FiveChessFrame extends JFrame implements MouseListener, Runnable {
                     int tempy = j * 20 + 70;
                     g2.setColor(Color.white);
                     g2.fillOval(tempx - 7, tempy - 7, 14, 14);
-                    g2.setColor(Color.BLACK);
-                    g2.drawOval(tempx - 7, tempy - 7, 14, 14);
                 }
             }
         }
@@ -169,23 +157,84 @@ public class FiveChessFrame extends JFrame implements MouseListener, Runnable {
             }
         }
 
-            //System.out.println(mouseEvent.getX()+"--"+mouseEvent.getY());
-            //进入开始游戏 按钮
-            if (mouseEvent.getX() >= 400 && mouseEvent.getX() <= 470 && mouseEvent.getY() >= 70 && mouseEvent.getY() <= 100) {
-                int result = JOptionPane.showConfirmDialog(this, "是否重建开始游戏");
-                if (result == 0) {
-                    //重新开始 1）清空棋盘 allChese全部归0  2）将游戏信息的显示改回到开始位置
-                    // 3）将下一步下棋的人改为黑方
-                    for (int i = 0; i < 19; i++) {
-                        for (int j = 0; j < 19; j++) {
-                            allChess[i][j] = 0;
-                        }
+        //进入开始游戏 按钮
+        if (mouseEvent.getX() >= 400 && mouseEvent.getX() <= 470 &&
+                mouseEvent.getY() >= 70 && mouseEvent.getY() <= 100) {
+            int result = JOptionPane.showConfirmDialog(this, "是否重建开始游戏");
+            if (result == 0) {
+                //重新开始 1）清空棋盘 allChese全部归0  2）将游戏信息的显示改回到开始位置
+                // 3）将下一步下棋的人改为黑方
+                for (int i = 0; i < 19; i++) {
+                    for (int j = 0; j < 19; j++) {
+                        allChess[i][j] = 0;
                     }
-                    message = "黑方先行";
-                    isBlack = true;
-                    blackTime = maxTime;
-                    whiteTime = maxTime;
-                    if (maxTime > 0) {
+                }
+                message = "黑方先行";
+                isBlack = true;
+                blackTime = maxTime;
+                whiteTime = maxTime;
+                if (maxTime > 0) {
+                    blackMessage = maxTime / 3600 + ":" +
+                            (maxTime / 60 - maxTime / 3600 * 60) + ":" +
+                            (maxTime - maxTime / 60 * 60);
+                    whiteMessage = maxTime / 3600 + ":" +
+                            (maxTime / 60 - maxTime / 3600 * 60) + ":" +
+                            (maxTime - maxTime / 60 * 60);
+                    t.resume();//重新启动线程
+                } else {
+                    blackMessage = "无限制";
+                    whiteMessage = "无限制";
+                }
+                this.repaint(); //没有这一步，不会自动清空，需要下一步棋才会清空
+                canPlay = true;
+            }
+        }
+        //进入游戏设置 按钮
+        if (mouseEvent.getX() >= 400 && mouseEvent.getX() <= 470 &&
+                mouseEvent.getY() >= 120 && mouseEvent.getY() <= 150) {
+            String input = JOptionPane.showInputDialog("请输入游戏的最大时间（分钟）：" +
+                    "(如果输入0，则没有时间限制)");
+            //添加try-catch:Ctrl+Alt+t
+            try {
+                maxTime = Integer.parseInt(input) * 60;//强制类型转换，String->int
+                if (maxTime < 0) {
+                    JOptionPane.showMessageDialog(this, "请输入争取信息，" +
+                            "不允许输入负值");
+                }
+                if (maxTime == 0) {
+                    int result = JOptionPane.showConfirmDialog(this, "设置完成," +
+                            "是否重新开始游戏");
+                    if (result == 0) {
+                        //重新开始 1）清空棋盘 allChese全部归0  2）将游戏信息的显示改回到开始位置
+                        // 3）将下一步下棋的人改为黑方
+                        for (int i = 0; i < 19; i++) {
+                            for (int j = 0; j < 19; j++) {
+                                allChess[i][j] = 0;
+                            }
+                        }
+                        message = "黑方先行";
+                        isBlack = true;
+                        blackTime = maxTime;
+                        whiteTime = maxTime;
+                        blackMessage = "无限制";
+                        whiteMessage = "无限制";
+                        this.repaint(); //没有这一步，不会自动清空，需要下一步棋才会清空
+                    }
+                }
+                if (maxTime > 0) {
+                    int result = JOptionPane.showConfirmDialog(this, "设置完成,是否重新开始游戏");
+                    if (result == 0) {
+                        //重新开始 1）清空棋盘 allChese全部归0  2）将游戏信息的显示改回到开始位置
+                        // 3）将下一步下棋的人改为黑方
+                        for (int i = 0; i < 19; i++) {
+                            for (int j = 0; j < 19; j++) {
+                                allChess[i][j] = 0;
+                            }
+                        }
+                        message = "黑方先行";
+                        isBlack = true;
+                        blackTime = maxTime;
+                        whiteTime = maxTime;
                         blackMessage = maxTime / 3600 + ":" +
                                 (maxTime / 60 - maxTime / 3600 * 60) + ":" +
                                 (maxTime - maxTime / 60 * 60);
@@ -193,94 +242,38 @@ public class FiveChessFrame extends JFrame implements MouseListener, Runnable {
                                 (maxTime / 60 - maxTime / 3600 * 60) + ":" +
                                 (maxTime - maxTime / 60 * 60);
                         t.resume();//重新启动线程
-                    } else {
-                        blackMessage = "无限制";
-                        whiteMessage = "无限制";
+                        this.repaint(); //没有这一步，不会自动清空，需要下一步棋才会清空
                     }
-                    this.repaint(); //没有这一步，不会自动清空，需要下一步棋才会清空
                 }
+            } catch (NumberFormatException e1) {
+                JOptionPane.showMessageDialog(this, "请正确输入信息");
             }
-            //进入游戏设置 按钮
-            if (mouseEvent.getX() >= 400 && mouseEvent.getX() <= 470 && mouseEvent.getY() >= 120 && mouseEvent.getY() <= 150) {
-                String input = JOptionPane.showInputDialog("请输入游戏的最大时间（分钟）：(如果输入0，则没有时间限制)");
-                //添加try-catch:Ctrl+Alt+t
-                try {
-                    maxTime = Integer.parseInt(input) * 60;//强制类型转换，String->int
-                    if (maxTime < 0) {
-                        JOptionPane.showMessageDialog(this, "请输入争取信息，不允许输入负值");
-                    }
-                    if (maxTime == 0) {
-                        int result = JOptionPane.showConfirmDialog(this, "设置完成,是否重新开始游戏");
-                        if (result == 0) {
-                            //重新开始 1）清空棋盘 allChese全部归0  2）将游戏信息的显示改回到开始位置
-                            // 3）将下一步下棋的人改为黑方
-                            for (int i = 0; i < 19; i++) {
-                                for (int j = 0; j < 19; j++) {
-                                    allChess[i][j] = 0;
-                                }
-                            }
-                            message = "黑方先行";
-                            isBlack = true;
-                            blackTime = maxTime;
-                            whiteTime = maxTime;
-                            blackMessage = "无限制";
-                            whiteMessage = "无限制";
-                            this.repaint(); //没有这一步，不会自动清空，需要下一步棋才会清空
-                        }
-                    }
-                    if (maxTime > 0) {
-                        int result = JOptionPane.showConfirmDialog(this, "设置完成,是否重新开始游戏");
-                        if (result == 0) {
-                            //重新开始 1）清空棋盘 allChese全部归0  2）将游戏信息的显示改回到开始位置
-                            // 3）将下一步下棋的人改为黑方
-                            for (int i = 0; i < 19; i++) {
-                                for (int j = 0; j < 19; j++) {
-                                    allChess[i][j] = 0;
-                                }
-                            }
-                            message = "黑方先行";
-                            isBlack = true;
-                            blackTime = maxTime;
-                            whiteTime = maxTime;
-                            blackMessage = maxTime / 3600 + ":" +
-                                    (maxTime / 60 - maxTime / 3600 * 60) + ":" +
-                                    (maxTime - maxTime / 60 * 60);
-                            whiteMessage = maxTime / 3600 + ":" +
-                                    (maxTime / 60 - maxTime / 3600 * 60) + ":" +
-                                    (maxTime - maxTime / 60 * 60);
-                            t.resume();//重新启动线程
-                            this.repaint(); //没有这一步，不会自动清空，需要下一步棋才会清空
-                        }
-                    }
-                } catch (NumberFormatException e1) {
-                    JOptionPane.showMessageDialog(this, "请正确输入信息");
+        }
+        //进入游戏说明 按钮
+        if (mouseEvent.getX() >= 400 && mouseEvent.getX() <= 470 && mouseEvent.getY() >= 170 && mouseEvent.getY() <= 200) {
+            JOptionPane.showMessageDialog(this, "游戏说明");
+        }
+        //进入关于 按钮
+        if (mouseEvent.getX() >= 400 && mouseEvent.getX() <= 470 && mouseEvent.getY() >= 270 && mouseEvent.getY() <= 300) {
+            JOptionPane.showMessageDialog(this, "关于");
+        }
+        //进入认输 按钮
+        if (mouseEvent.getX() >= 400 && mouseEvent.getX() <= 470 && mouseEvent.getY() >= 320 && mouseEvent.getY() <= 330) {
+            int result = JOptionPane.showConfirmDialog(this, "是否确认认输");
+            if (result == 0) {
+                if (isBlack) {
+                    JOptionPane.showMessageDialog(this, "黑方已经认输，游戏结束");
+                } else {
+                    JOptionPane.showMessageDialog(this, "白方已经认输，游戏结束");
                 }
+                canPlay = false;
             }
-            //进入游戏说明 按钮
-            if (mouseEvent.getX() >= 400 && mouseEvent.getX() <= 470 && mouseEvent.getY() >= 170 && mouseEvent.getY() <= 200) {
-                JOptionPane.showMessageDialog(this, "游戏说明");
-            }
-            //进入认输 按钮
-            if (mouseEvent.getX() >= 400 && mouseEvent.getX() <= 470 && mouseEvent.getY() >= 270 && mouseEvent.getY() <= 300) {
-                JOptionPane.showMessageDialog(this, "认输");
-            }
-            //进入关于 按钮
-            if (mouseEvent.getX() >= 400 && mouseEvent.getX() <= 470 && mouseEvent.getY() >= 320 && mouseEvent.getY() <= 330) {
-                int result = JOptionPane.showConfirmDialog(this, "是否确认认输");
-                if (result == 0) {
-                    if (isBlack) {
-                        JOptionPane.showMessageDialog(this, "黑方已经认输，游戏结束");
-                    } else {
-                        JOptionPane.showMessageDialog(this, "白方已经认输，游戏结束");
-                    }
-                    canPlay = false;
-                }
-            }
-            //进入退出 按钮
-            if (mouseEvent.getX() >= 400 && mouseEvent.getX() <= 470 && mouseEvent.getY() >= 370 && mouseEvent.getY() <= 400) {
-                JOptionPane.showMessageDialog(this, "退出");
-                System.exit(0);
-            }
+        }
+        //进入退出 按钮
+        if (mouseEvent.getX() >= 400 && mouseEvent.getX() <= 470 && mouseEvent.getY() >= 370 && mouseEvent.getY() <= 400) {
+            JOptionPane.showMessageDialog(this, "退出");
+            System.exit(0);
+        }
 
     }
 
@@ -301,79 +294,8 @@ public class FiveChessFrame extends JFrame implements MouseListener, Runnable {
 
     private boolean checkWin() {
         boolean flag = false;
-
-
         //判断横向是否5连,特点：y坐标相同，即allChese[x][y]中y值相同
         int color = allChess[x][y];
-     /*
-       //保存共有相同颜色多少棋子相连
-        int count = 1;
-        if (color == allChess[x+1][y]){
-            count++;
-            if (color == allChess[x+2 ][y]){
-                count++;
-            }
-        }*/
-        //通过循环来做棋子相连判断
-        /*int i = 1;
-        while(color == allChess[x+i][y]){
-            count++;
-            i++;
-        }
-        i = 1;
-        while (color == allChess[x-1][y]){
-            count++;
-            i++;
-        }
-        if (count >= 5){
-            flag = true;
-        }
-        //纵向判断
-        int i2 = 1;
-        int count2 = 1;
-        while(color == allChess[x][y+i2]){
-            count2++;
-            i2++;
-        }
-        i2 = 1;
-        while (color == allChess[x][y-i2]){
-            count2++;
-            i2++;
-        }
-        if (count2 >= 5){
-            flag = true;
-        }
-
-        //斜方向的判断（右上+左下）
-        int i3 = 1;
-        int count3 = 1;
-        while(color == allChess[x+i3][y-i3]){
-            count3++;
-            i3++;
-        }
-        i3 = 1;
-        while (color == allChess[x-i3][y+i3]){
-            count3++;
-            i3++;
-        }
-        if (count3 >= 5){
-            flag = true;
-        }
-        //斜方向的判断（左上+右下）
-        int i4 = 1;
-        int count4 = 1;
-        while(color == allChess[x+i4][y+i4]){
-            count4++;
-            i4++;
-        }
-        i4 = 1;
-        while (color == allChess[x-i4][y-i4]){
-            count4++;
-            i4++;
-        }
-        if (count4 >= 5){
-            flag = true;
-        }*/
         //横向
         int count = this.checkCount(1, 0, color);
         if (count >= 5) {
@@ -397,9 +319,7 @@ public class FiveChessFrame extends JFrame implements MouseListener, Runnable {
                 }
             }
         }
-
         return flag;
-
     }
 
     //判断棋子连接的数量
@@ -429,7 +349,7 @@ public class FiveChessFrame extends JFrame implements MouseListener, Runnable {
             count++;
             if (xChange != 0)
                 xChange++;
-            if (yChange != 0){
+            if (yChange != 0) {
                 if (yChange > 0)
                     yChange++;
                 else {
@@ -437,8 +357,6 @@ public class FiveChessFrame extends JFrame implements MouseListener, Runnable {
                 }
             }
         }
-
-
         return count;
     }
 
@@ -474,11 +392,5 @@ public class FiveChessFrame extends JFrame implements MouseListener, Runnable {
                 System.out.println(blackTime + "--" + whiteTime);
             }
         }
-
     }
-
-    /*public static void main(String[] args) {
-        var gb = new Gobang_UI.FiveChessFrame();
-    }
-*/
 }
